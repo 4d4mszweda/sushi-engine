@@ -1,10 +1,26 @@
 import pygame
+from enum import Enum
 from settings import WHITE, BLACK 
 
+class PieceType(Enum):
+    KING = 'king'
+    QUEEN = 'queen'
+    ROOK = 'rook'
+    BISHOP = 'bishop'
+    KNIGHT = 'knight'
+    PAWN = 'pawn'
+
 class ChessPiece:
-    def __init__(self, image_path, position):
-        self.image = pygame.image.load(image_path)
+    def __init__(self, piece_type, side, position):
+        self.piece_type = piece_type
+        # self.color = color
+        # TODO switch po PieceType
         self.position = position
+        self.image = self.load_image()
+
+    def load_image(self):
+        image_path = f'images/{self.color}_{self.piece_type.value}.png'
+        return pygame.image.load(image_path)
 
     def draw(self, surface):
         surface.blit(self.image, self.position)
