@@ -1,40 +1,30 @@
 import pygame
-from pygame.locals import *
 import sys
+from settings import *
+from elements import *
 
-pygame.init()
+def main():
+    board = ChessBoard(8, 50)
+    pieces = [
+        ChessPiece('path_to_white_rook.png', (0, 0)),
+        ChessPiece('path_to_black_rook.png', (350, 350))
+    ]
 
-# Framerate
-FPS = pygame.time.Clock()
-FPS.tick(60)
-# FPS = 60
-# FramePerSec = pygame.time.Clock()
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:  
+                running = False
+        pygame.display.update()
 
-# Default Colors
-BLUE  = (0, 0, 255)
-RED   = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-
-# Resolution
-SCREEN_WIDTH = 400
-SCREEN_HEIGHT = 600
-
-DISPLAYSURF = pygame.display.set_mode((SCREEN_HEIGHT,SCREEN_WIDTH ))
-DISPLAYSURF.fill(WHITE)
-pygame.display.set_caption("sushi-engine")
-
-
-while True:
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            pygame.quit()
-            sys.exit()
-    pygame.display.update()
+    pygame.quit()
+    sys.exit()
 
 
 # REMAINDER FOR STUPIDOS
 # python -m venv venv
 # venv/scripts/activate
 # pip install -r requirements.txt // pip freeze > requirements.txt
+
+if __name__ == "__main__":
+    main()
