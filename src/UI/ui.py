@@ -4,11 +4,11 @@ from settings import *
 from elements import *
 
 def main():
-    board = ChessBoard(8, 50)
-    pieces = [
-        ChessPiece('path_to_white_rook.png', (0, 0)),
-        ChessPiece('path_to_black_rook.png', (350, 350))
-    ]
+    # board = ChessBoard(8, 50)
+    # pieces = [
+    #     ChessPiece('path_to_white_rook.png', (0, 0)),
+    #     ChessPiece('path_to_black_rook.png', (350, 350))
+    # ]
 
     running = True
     while running:
