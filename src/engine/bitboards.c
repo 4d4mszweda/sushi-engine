@@ -1,5 +1,40 @@
 #include "bitboards.h"
 
+BitBoard magic_table_rook[64];
+BitBoard magic_table_bishop[64];
+BitBoard bishop_masks[64];
+BitBoard rook_masks[64];
+BitBoard not_a_file = 18374403900871474942ULL;
+BitBoard not_h_file = 9187201950435737471ULL;
+BitBoard not_hg_file = 4557430888798830399ULL;
+BitBoard not_ab_file = 18229723555195321596ULL;
+
+int rook_rellevant_bits[64] = {
+    12, 11, 11, 11, 11, 11, 11, 12,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    12, 11, 11, 11, 11, 11, 11, 12};
+
+int bishop_rellevant_bits[64] = {
+    6, 5, 5, 5, 5, 5, 5, 6,
+    5, 5, 5, 5, 5, 5, 5, 5,
+    5, 5, 7, 7, 7, 7, 5, 5,
+    5, 5, 7, 9, 9, 7, 5, 5,
+    5, 5, 7, 9, 9, 7, 5, 5,
+    5, 5, 7, 7, 7, 7, 5, 5,
+    5, 5, 5, 5, 5, 5, 5, 5,
+    6, 5, 5, 5, 5, 5, 5, 6};
+
+BitBoard bishop_attacks[64][512];
+BitBoard rook_attacks[64][4096];
+BitBoard pawn_attacks[2][64];
+BitBoard knight_attacks[64];
+BitBoard king_attacks[64];
+
 BitBoard mask_pawn_attacks(int side, int square)
 {
     // attack bitboard
@@ -352,8 +387,8 @@ void init_leaper_attacks()
 void init_all_pieces()
 {
     init_leaper_attacks();
-    init_sliders_attacks(bishop);
-    init_sliders_attacks(rook);
+    init_sliders_attacks(0);
+    init_sliders_attacks(1);
 }
 
 BitBoard get_bishop_attacks(int square, BitBoard occupancy)
@@ -368,7 +403,6 @@ BitBoard get_bishop_attacks(int square, BitBoard occupancy)
 
 BitBoard get_rook_attacks(int square, BitBoard occupancy)
 {
-
     occupancy &= rook_masks[square];
     occupancy *= magic_table_rook[square];
     occupancy >>= 64 - rook_rellevant_bits[square];
