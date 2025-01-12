@@ -5,7 +5,7 @@ import os
 class ChessEngine:
     def __init__(self):
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        engine_path = os.path.join(script_dir, "../chess.exe")
+        engine_path = os.path.join(script_dir, "../chess")
         self.process = subprocess.Popen(
             [engine_path],
             stdin=subprocess.PIPE,

@@ -1,20 +1,39 @@
 import pygame
 from settings import *
+import chess
+import chess.svg
 
 class System:
-    def __init__(self):
+    def __init__(self, fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", pgn=""):
         self.winner = ""
-        self.captured_pieces_white = ["pawn","knight","bishop"]
-        self.captured_pieces_black = ["pawn","rook","pawn","queen"]
+        self.captured_pieces_white, self.captured_pieces_black = self.get_missing_pieces(fen, pgn)
         self.turn = True
-        self.pgn = ""
-        self.fen = ""
+        self.pgn = pgn
+        self.fen = fen
         self.message = "TO JEST TESTOWA WIADOMOŚĆ"
         self.images = {}
         self.auto = False
+        self.board = chess.Board(fen)
+        print(self.board.board_fen())
+        print(self.board.turn)
+        print(self.board.castling_rights)
+        print(self.board.ep_square)
+        print(self.board.halfmove_clock)
+        print(self.board.fullmove_number)
         self.load_images()
         return
     
+    def update_fen():
+        return
+    
+    def update_pgn():
+        return
+
+    def get_missing_pieces(self, fen, pgn):
+        # if pgn == "" and fen == "":
+        #     return [], []
+        return ["pawn","knight","bishop"], ["pawn","rook","pawn","queen"]
+
     def load_images(self):
         pieces = ['pawn', 'rook', 'knight', 'bishop', 'queen', 'king']
         colors = ['w', 'b']
