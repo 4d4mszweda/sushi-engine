@@ -17,9 +17,9 @@ WHITE = (255, 255, 255)
 SOFT_BLACK = (48, 48, 48)
 SOFT_RED = (209, 74, 65)
 GOLD = (250, 223, 22)
-MAIN_BOARD = (92, 32, 32)
-SECOND_BOARD = (251,245,222)
-GREY_TEXT = (148, 148, 148)
+MAIN_BOARD = (166, 110, 56)
+SECOND_BOARD = (240, 187, 120)
+GREY = (148, 148, 148)
 
 # Resolution
 SCREEN_WIDTH = 1000
@@ -31,7 +31,7 @@ MEDIUM_FONT = pygame.font.Font('freesansbold.ttf', 40)
 BIG_FONT = pygame.font.Font('freesansbold.ttf', 50)
 
 # Icon
-ICON = pygame.image.load('resources/icon.png')
+ICON = pygame.image.load('src/UI/resources/icon.png')
 pygame.display.set_icon(ICON)
 
 # Screen

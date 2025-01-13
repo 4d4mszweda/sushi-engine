@@ -119,11 +119,11 @@ class System:
                 # pygame.draw.rect(DISPLAYSURF, BLACK, square_rect, 1)
                                 
                 if row == 7:
-                    letter_text = FONT.render(chr(ord('a') + col), True, GREY_TEXT)
+                    letter_text = FONT.render(chr(ord('a') + col), True, WHITE)
                     DISPLAYSURF.blit(letter_text, (self.board_rect.left + col * square_size + square_size - letter_text.get_width() - 4, row * square_size + square_size + 14))
 
                 if col == 0:
-                    number_text = FONT.render(str(8 - row), True, GREY_TEXT)
+                    number_text = FONT.render(str(8 - row), True, WHITE)
                     DISPLAYSURF.blit(number_text, (self.board_rect.left + 4 + col * square_size, row * square_size + square_size // 2 ))
 
     def draw_text_wrapped(self, text, rect, font, color, margin=5):
