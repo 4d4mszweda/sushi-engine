@@ -13,25 +13,19 @@ class System:
         self.message = "TO JEST TESTOWA WIADOMOŚĆ"
         self.score = 0
         self.auto = False
-        print(self.board.board_fen())
-        print(self.board.turn)
-        print(self.board.castling_rights)
-        print(self.board.ep_square)
-        print(self.board.halfmove_clock)
-        print(self.board.fullmove_number)
         self.images = {
-            'r': pygame.image.load('resources/pieces/b_rook.png'),
-            'n': pygame.image.load('resources/pieces/b_knight.png'),
-            'b': pygame.image.load('resources/pieces/b_bishop.png'),
-            'q': pygame.image.load('resources/pieces/b_queen.png'),
-            'k': pygame.image.load('resources/pieces/b_king.png'),
-            'p': pygame.image.load('resources/pieces/b_pawn.png'),
-            'R': pygame.image.load('resources/pieces/w_rook.png'),
-            'N': pygame.image.load('resources/pieces/w_knight.png'),
-            'B': pygame.image.load('resources/pieces/w_bishop.png'),
-            'Q': pygame.image.load('resources/pieces/w_queen.png'),
-            'K': pygame.image.load('resources/pieces/w_king.png'),
-            'P': pygame.image.load('resources/pieces/w_pawn.png')
+            'r': pygame.image.load('src/UI/resources/pieces/b_rook.png'),
+            'n': pygame.image.load('src/UI/resources/pieces/b_knight.png'),
+            'b': pygame.image.load('src/UI/resources/pieces/b_bishop.png'),
+            'q': pygame.image.load('src/UI/resources/pieces/b_queen.png'),
+            'k': pygame.image.load('src/UI/resources/pieces/b_king.png'),
+            'p': pygame.image.load('src/UI/resources/pieces/b_pawn.png'),
+            'R': pygame.image.load('src/UI/resources/pieces/w_rook.png'),
+            'N': pygame.image.load('src/UI/resources/pieces/w_knight.png'),
+            'B': pygame.image.load('src/UI/resources/pieces/w_bishop.png'),
+            'Q': pygame.image.load('src/UI/resources/pieces/w_queen.png'),
+            'K': pygame.image.load('src/UI/resources/pieces/w_king.png'),
+            'P': pygame.image.load('src/UI/resources/pieces/w_pawn.png')
         }
     
     def update(self):
