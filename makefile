@@ -14,6 +14,9 @@ $(OUTPUT): $(OBJS)
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+run: $(OUTPUT)
+    python3 src/UI/ui.py
+
 leak:
 	valgrind --leak-check=full \
          --show-leak-kinds=all \
