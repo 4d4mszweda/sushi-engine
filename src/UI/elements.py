@@ -5,43 +5,56 @@ import chess.svg
 
 class System:
     def __init__(self, fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", pgn=""):
-        self.winner = ""
-        self.captured_pieces_white, self.captured_pieces_black = self.get_missing_pieces(fen, pgn)
-        self.turn = True
         self.pgn = pgn
-        self.fen = fen
-        self.message = "TO JEST TESTOWA WIADOMOŚĆ"
-        self.images = {}
-        self.auto = False
         self.board = chess.Board(fen)
-        print(self.board.board_fen())
-        print(self.board.turn)
-        print(self.board.castling_rights)
-        print(self.board.ep_square)
-        print(self.board.halfmove_clock)
-        print(self.board.fullmove_number)
-        self.load_images()
-        return
+        self.winner = ""
+        self.captured_pieces_white, self.captured_pieces_black = self.get_missing_pieces()
+        self.turn = True
+        self.message = "TO JEST TESTOWA WIADOMOŚĆ"
+        self.score = 0
+        self.auto = False
+        self.images = {
+            'r': pygame.image.load('src/UI/resources/pieces/b_rook.png'),
+            'n': pygame.image.load('src/UI/resources/pieces/b_knight.png'),
+            'b': pygame.image.load('src/UI/resources/pieces/b_bishop.png'),
+            'q': pygame.image.load('src/UI/resources/pieces/b_queen.png'),
+            'k': pygame.image.load('src/UI/resources/pieces/b_king.png'),
+            'p': pygame.image.load('src/UI/resources/pieces/b_pawn.png'),
+            'R': pygame.image.load('src/UI/resources/pieces/w_rook.png'),
+            'N': pygame.image.load('src/UI/resources/pieces/w_knight.png'),
+            'B': pygame.image.load('src/UI/resources/pieces/w_bishop.png'),
+            'Q': pygame.image.load('src/UI/resources/pieces/w_queen.png'),
+            'K': pygame.image.load('src/UI/resources/pieces/w_king.png'),
+            'P': pygame.image.load('src/UI/resources/pieces/w_pawn.png')
+        }
     
+    def update(self):
+        self.draw_score()
+        self.draw_board()
+        self.draw_history()
+        self.draw_pieces()
+
+    def event_listener(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:  
+                return False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = event.pos
+                self.handle_button_click(mouse_pos)
+        return True
+
     def update_fen():
         return
     
     def update_pgn():
         return
 
-    def get_missing_pieces(self, fen, pgn):
-        # if pgn == "" and fen == "":
+    def get_missing_pieces(self):
+        # if fen == "":
         #     return [], []
-        return ["pawn","knight","bishop"], ["pawn","rook","pawn","queen"]
+        return ["p","n","b"], ["P","R","P","Q"]
 
-    def load_images(self):
-        pieces = ['pawn', 'rook', 'knight', 'bishop', 'queen', 'king']
-        colors = ['w', 'b']
-        for color in colors:
-            for piece in pieces:
-                self.images[f'{color}_{piece}'] = pygame.image.load(f'resources/pieces/{color}_{piece}.png')
-    
-    def draw_score(self, score=0):
+    def draw_score(self):
         score_width = SCREEN_WIDTH // 8
         score_rect = pygame.Rect(0, 0, score_width, SCREEN_HEIGHT)
         pygame.draw.rect(DISPLAYSURF, (200, 200, 200), score_rect)
@@ -52,11 +65,11 @@ class System:
         thermometer_y = (SCREEN_HEIGHT - thermometer_height) // 2
         half_height = thermometer_height // 2
 
-        if score > 0:
-            white_height = half_height + (score / 100) * half_height # wymień ten wskaźnik na inny w zależności jak wygląda score
+        if self.score > 0:
+            white_height = half_height + (self.score / 100) * half_height # wymień ten wskaźnik na inny w zależności jak wygląda score
             black_height = thermometer_height - white_height
-        elif score < 0:
-            black_height = half_height + (abs(score) / 100) * half_height # wymień ten wskaźnik na inny w zależności jak wygląda score
+        elif self.score < 0:
+            black_height = half_height + (abs(self.score) / 100) * half_height # wymień ten wskaźnik na inny w zależności jak wygląda score
             white_height = thermometer_height - black_height
         else:
             white_height = half_height
@@ -68,53 +81,50 @@ class System:
         white_rect = pygame.Rect(thermometer_x, thermometer_y + black_height, thermometer_width, white_height)
         pygame.draw.rect(DISPLAYSURF, (255, 255, 255), white_rect)
 
-        score_text = FONT.render(f'Score: {score}', True, (0, 0, 0))
+        score_text = FONT.render(f'Score: {self.score}', True, (0, 0, 0))
         DISPLAYSURF.blit(score_text, (thermometer_x - score_width // 7, thermometer_y + thermometer_height + 10))
 
     def draw_board(self):
-        left_boundry_width = SCREEN_WIDTH // 8
-        right_boundry_width = SCREEN_WIDTH // 4
-        board_width = SCREEN_WIDTH - left_boundry_width - right_boundry_width
-        board_rect = pygame.Rect(left_boundry_width, 0, board_width, SCREEN_HEIGHT)
-        pygame.draw.rect(DISPLAYSURF, (200, 200, 200), board_rect)
+        main_rect = pygame.Rect(SCREEN_WIDTH // 8, 0, SCREEN_WIDTH - SCREEN_WIDTH // 8 - SCREEN_WIDTH // 4, SCREEN_HEIGHT)
+        pygame.draw.rect(DISPLAYSURF, (200, 200, 200), main_rect)
+
+        self.board_rect = pygame.Rect(main_rect.left, main_rect.top + main_rect.height // 20, main_rect.width, int(main_rect.height * 0.9))
 
         pieces_text = FONT.render("Pieces:", True, (0, 0, 0))
-        DISPLAYSURF.blit(pieces_text, (board_rect.left + 5, board_rect.top + 10))
-        DISPLAYSURF.blit(pieces_text, (board_rect.left + 5, board_rect.bottom - pieces_text.get_height() - 10)) 
+        DISPLAYSURF.blit(pieces_text, (main_rect.left + 5, main_rect.top + 10))
+        DISPLAYSURF.blit(pieces_text, (main_rect.left + 5, main_rect.bottom - pieces_text.get_height() - 10)) 
 
         # Wyświetlanie podobizn figur z captured_pieces_black
-        x_offset = board_rect.left + pieces_text.get_width() + board_width // 50
-        y_offset = board_rect.top + 8
+        x_offset = main_rect.left + pieces_text.get_width() + main_rect.width // 50
+        y_offset = main_rect.top + 6
         for piece in self.captured_pieces_black:
-            image_key = f'w_{piece}'
-            if image_key in self.images:
-                DISPLAYSURF.blit(pygame.transform.scale(self.images[image_key], (25,25)), (x_offset, y_offset))
-                x_offset += 10 + board_width // 50
+            if piece in self.images:
+                DISPLAYSURF.blit(pygame.transform.scale(self.images[piece], (25,25)), (x_offset, y_offset))
+                x_offset += 10 + main_rect.width // 50
 
         # Wyświetlanie podobizn figur z captured_pieces_white
-        x_offset = board_rect.left + pieces_text.get_width() + board_width // 50
-        y_offset = board_rect.bottom - pieces_text.get_height() - 12
+        x_offset = main_rect.left + pieces_text.get_width() + main_rect.width // 50
+        y_offset = main_rect.bottom - pieces_text.get_height() - 12
         for piece in self.captured_pieces_white:
-            image_key = f'b_{piece}'
-            if image_key in self.images:
-                DISPLAYSURF.blit(pygame.transform.scale(self.images[image_key], (25,25)), (x_offset, y_offset))
-                x_offset += 10 + board_width // 50
+            if piece in self.images:
+                DISPLAYSURF.blit(pygame.transform.scale(self.images[piece], (25,25)), (x_offset, y_offset))
+                x_offset += 10 + main_rect.width // 50
 
-        square_size = board_width // 8
+        square_size = self.board_rect.width // 8
         for row in range(8):
             for col in range(8):
-                color = (209, 74, 65) if (row + col) % 2 == 0 else (48, 48, 48)
-                square_rect = pygame.Rect(left_boundry_width + col * square_size, SCREEN_HEIGHT // 19 + row * square_size, square_size, square_size)
+                color = MAIN_BOARD if (row + col) % 2 == 0 else SECOND_BOARD
+                square_rect = pygame.Rect(self.board_rect.left + col * square_size, SCREEN_HEIGHT // 19 + row * square_size, square_size, square_size)
                 pygame.draw.rect(DISPLAYSURF, color, square_rect)
-                pygame.draw.rect(DISPLAYSURF, (250, 223, 22), square_rect, 1)
+                # pygame.draw.rect(DISPLAYSURF, BLACK, square_rect, 1)
                                 
                 if row == 7:
-                    letter_text = FONT.render(chr(ord('a') + col), True, (179, 179, 179))
-                    DISPLAYSURF.blit(letter_text, (left_boundry_width + col * square_size + square_size - letter_text.get_width() - 4, row * square_size + square_size + 14))
+                    letter_text = FONT.render(chr(ord('a') + col), True, WHITE)
+                    DISPLAYSURF.blit(letter_text, (self.board_rect.left + col * square_size + square_size - letter_text.get_width() - 4, row * square_size + square_size + 14))
 
                 if col == 0:
-                    number_text = FONT.render(str(8 - row), True, (179, 179, 179))
-                    DISPLAYSURF.blit(number_text, (left_boundry_width + 4 + col * square_size, row * square_size + square_size // 2 ))
+                    number_text = FONT.render(str(8 - row), True, WHITE)
+                    DISPLAYSURF.blit(number_text, (self.board_rect.left + 4 + col * square_size, row * square_size + square_size // 2 ))
 
     def draw_text_wrapped(self, text, rect, font, color, margin=5):
         words = text.split(' ')
@@ -196,6 +206,16 @@ class System:
         elif self.auto_switch.collidepoint(mouse_pos):
             self.handle_switch()
 
+    def draw_pieces(self):
+        square_size = self.board_rect.width // 8
+        for row in range(8):
+            for col in range(8):
+                piece = self.board.piece_at(chess.square(col, 7 - row))
+                if piece:
+                    x = self.board_rect.left + col * square_size
+                    y = self.board_rect.top + row * square_size
+                    DISPLAYSURF.blit(pygame.transform.scale(self.images[str(piece)], (square_size, square_size)), (x, y))
+        
     def handle_revert_move(self):
         print("Revert move button clicked!")
 

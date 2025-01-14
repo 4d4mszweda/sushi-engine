@@ -6,25 +6,9 @@ from elements import *
 running = True
 system = System()
 
-x = 0 # TMP
-
-while running:
-    if x < 100: # TMP
-        x += 1 # TMP
-        
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:  
-            running = False
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            mouse_pos = event.pos
-            system.handle_button_click(mouse_pos)
-
-
-    DISPLAYSURF.fill(WHITE)
-    system.draw_score(x)
-    system.draw_board()
-    system.draw_history()
-
+while running:        
+    running = system.event_listener()
+    system.update()
     pygame.display.update()
     delta = FPS_TIMER.tick(FPS) / 1000
 
