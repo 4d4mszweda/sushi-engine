@@ -7,10 +7,9 @@ import pyperclip
 class System:
     def __init__(self, fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
         self.board = chess.Board(fen)
-        self.winner = ""
         self.captured_pieces_white, self.captured_pieces_black = self.get_missing_pieces()
         self.turn = True
-        self.message = "TO JEST TESTOWA WIADOMOŚĆ"
+        self.message = ""
         self.score = 0
         self.scroll_offset = 0
         self.scroll_speed = 20
