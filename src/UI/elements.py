@@ -121,10 +121,10 @@ class System:
         for piece, count in initial_pieces.items():
             if piece.isupper():
                 missing_count = count - current_pieces[piece]
-                captured_pieces_white.extend([piece] * missing_count)
+                captured_pieces_black.extend([piece] * missing_count)
             else:
                 missing_count = count - current_pieces[piece]
-                captured_pieces_black.extend([piece] * missing_count)
+                captured_pieces_white.extend([piece] * missing_count)
 
         return captured_pieces_white, captured_pieces_black
 
@@ -232,9 +232,12 @@ class System:
         revert_btn_hover = self.revert_btn.collidepoint(pygame.mouse.get_pos())
         self.draw_button(self.revert_btn, "Revert move", self.revert_btn.collidepoint(pygame.mouse.get_pos()))
 
-        self.fen_btn = pygame.Rect(hist_rect.centerx - button_width  // 2 - button_margin // 2, hist_rect.bottom - button_height - button_margin, button_width, button_height)
+        self.fen_btn = pygame.Rect(hist_rect.centerx - button_width  // 2 - button_margin // 2, hist_rect.bottom - button_height - button_margin, button_width  // 2, button_height)
+        self.reset_btn = pygame.Rect(hist_rect.centerx + button_margin // 2, hist_rect.bottom - button_height - button_margin, button_width // 2, button_height)
         fen_btn_hover = self.fen_btn.collidepoint(pygame.mouse.get_pos())
+        reset_btn_hover = self.reset_btn.collidepoint(pygame.mouse.get_pos())
         self.draw_button(self.fen_btn, "FEN", self.fen_btn.collidepoint(pygame.mouse.get_pos()))
+        self.draw_button(self.reset_btn, "RESET", self.reset_btn.collidepoint(pygame.mouse.get_pos()))
 
         self.auto_switch = pygame.Rect(hist_rect.centerx - button_width // 2, self.revert_btn.bottom + button_margin, button_width, button_height)
         auto_switch_hover = self.auto_switch.collidepoint(pygame.mouse.get_pos())
@@ -287,7 +290,7 @@ class System:
 
         # Blit the history surface onto the main display surface
         DISPLAYSURF.blit(history_surface, (history_rect.left, history_rect.top), (0, 0, history_rect.width, history_rect.height))
-        if revert_btn_hover or fen_btn_hover or auto_switch_hover:
+        if revert_btn_hover or fen_btn_hover or auto_switch_hover or reset_btn_hover:
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
         else:
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
@@ -310,8 +313,14 @@ class System:
             self.handle_revert_move()
         elif self.fen_btn.collidepoint(mouse_pos):
             self.handle_fen()
+        elif self.reset_btn.collidepoint(mouse_pos):
+            self.handle_reset()
         elif self.auto_switch.collidepoint(mouse_pos):
             self.handle_switch()
+
+    def handle_reset(self):
+        self.update_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+        self.message = "Board was restarted"
 
     def handle_board_click(self, mouse_pos):
         if self.end:

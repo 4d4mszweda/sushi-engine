@@ -8,7 +8,12 @@ system = System()
 
 while running:        
     running = system.event_listener()
-    system.update()
+    
+    try:
+        system.update()
+    except Exception as e:
+        system.message = str(e)
+
     pygame.display.update()
     delta = FPS_TIMER.tick(FPS) / 1000
 
