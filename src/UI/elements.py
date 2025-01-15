@@ -14,6 +14,7 @@ class System:
         self.scroll_offset = 0
         self.scroll_speed = 20
         self.auto = False 
+        self.end = False
         self.selected_square = None
         self.possible_moves = []
         self.images = {
@@ -52,11 +53,35 @@ class System:
                 self.scroll_offset = max(min(self.scroll_offset, 0), -max_scroll_offset)
         return True
 
-    def update_fen():
+    def update_fen(self,fen):
+        self.board.set_fen(fen)
+        self.turn = self.board.turn
+        self.auto = False
+        self.selected_square = None
+        self.possible_moves = list(self.board.legal_moves)
+        self.captured_pieces_white, self.captured_pieces_black = self.get_missing_pieces()
+        self.check_conditions()
         return
-    
-    def update_pgn():
-        return
+
+    def check_conditions(self):
+        end = True
+        if self.board.is_checkmate():
+            self.message = "Checkmate! " + ("White wins!" if self.board.turn == chess.BLACK else "Black wins!")
+        elif self.board.is_stalemate():
+            self.message = "Stalemate! It's a draw!"
+        elif self.board.is_insufficient_material():
+            self.message = "Draw due to insufficient material!"
+        elif self.board.is_seventyfive_moves():
+            self.message = "Draw due to the seventy-five-move rule!"
+        elif self.board.is_fivefold_repetition():
+            self.message = "Draw due to fivefold repetition!"
+        elif self.board.is_variant_draw():
+            self.message = "Draw due to variant rules!"
+        elif self.board.is_variant_loss():
+            self.message = "Loss due to variant rules!"
+        else:
+            end = False
+        self.end = end
 
     def get_missing_pieces(self):
         initial_pieces = {
@@ -272,6 +297,9 @@ class System:
             self.handle_switch()
 
     def handle_board_click(self, mouse_pos):
+        if self.end:
+            self.check_conditions()
+            return
         if self.board_rect.collidepoint(mouse_pos):
             col = (mouse_pos[0] - self.board_rect.left) // (self.board_rect.width // 8)
             row = 7 - (mouse_pos[1] - self.board_rect.top) // (self.board_rect.width // 8)
@@ -291,8 +319,6 @@ class System:
                     self.move_piece(self.selected_square, square)
                 self.selected_square = None
                 self.possible_moves = []
-
-            print(f"Clicked on square: {chess.square_name(square)}")
 
     def draw_possible_moves(self):
         if self.selected_square is not None:
@@ -318,19 +344,90 @@ class System:
     def move_piece(self, from_square, to_square):
         move = chess.Move(from_square, to_square)
         if move in self.board.legal_moves:
-            captured_piece = self.board.piece_at(to_square)
-            if captured_piece:
-                if captured_piece.color == chess.WHITE:
-                    self.captured_pieces_black.append(captured_piece.symbol())
-                else:
-                    self.captured_pieces_white.append(captured_piece.symbol())
-            self.board.push(move)
-            self.turn = not self.turn
-            self.selected_square = None
-            self.possible_moves = []
-            print(f"Moved piece from {chess.square_name(from_square)} to {chess.square_name(to_square)}")
+            self.execute_move(move)
+        elif chess.square_rank(to_square) in [0, 7] and self.board.piece_at(from_square).piece_type == chess.PAWN:
+            # Check for legal promotion moves
+            for promotion_piece in [chess.QUEEN, chess.ROOK, chess.BISHOP, chess.KNIGHT]:
+                promotion_move = chess.Move(from_square, to_square, promotion=promotion_piece)
+                if promotion_move in self.board.legal_moves:
+                    self.promote_pawn(from_square, to_square)
+                    return
+            print(f"Illegal promotion move from {chess.square_name(from_square)} to {chess.square_name(to_square)}")
         else:
             print(f"Illegal move from {chess.square_name(from_square)} to {chess.square_name(to_square)}")
+
+    def execute_move(self, move):
+        captured_piece = self.board.piece_at(move.to_square)
+        if captured_piece:
+            if captured_piece.color == chess.WHITE:
+                self.captured_pieces_black.append(captured_piece.symbol())
+            else:
+                self.captured_pieces_white.append(captured_piece.symbol())
+        self.board.push(move)
+        self.turn = not self.turn
+        self.selected_square = None
+        self.possible_moves = []
+        print(f"Moved piece from {chess.square_name(move.from_square)} to {chess.square_name(move.to_square)}")
+        self.check_conditions()
+
+    def promote_pawn(self, from_square, to_square):
+        promotion_piece = self.promote_pawn_popup()
+        if promotion_piece:
+            move = chess.Move(from_square, to_square, promotion=promotion_piece)
+            if move in self.board.legal_moves:
+                self.execute_move(move)
+            else:
+                print(f"Illegal promotion move from {chess.square_name(from_square)} to {chess.square_name(to_square)} with promotion to {promotion_piece}")
+                
+    def promote_pawn_popup(self):
+        # Create a popup window
+        popup_width, popup_height = 200, 100
+        popup_rect = pygame.Rect((SCREEN_WIDTH - popup_width) // 2, (SCREEN_HEIGHT - popup_height) // 2, popup_width, popup_height)
+        pygame.draw.rect(DISPLAYSURF, (255, 255, 255), popup_rect)
+        pygame.draw.rect(DISPLAYSURF, (0, 0, 0), popup_rect, 2)
+
+        # Load images for promotion pieces
+        queen_img = self.images['Q' if self.turn else 'q']
+        rook_img = self.images['R' if self.turn else 'r']
+        bishop_img = self.images['B' if self.turn else 'b']
+        knight_img = self.images['N' if self.turn else 'n']
+
+        # Scale images to fit in the popup
+        piece_size = 40
+        queen_img = pygame.transform.scale(queen_img, (piece_size, piece_size))
+        rook_img = pygame.transform.scale(rook_img, (piece_size, piece_size))
+        bishop_img = pygame.transform.scale(bishop_img, (piece_size, piece_size))
+        knight_img = pygame.transform.scale(knight_img, (piece_size, piece_size))
+
+        # Draw images in the popup
+        margin = 10
+        queen_rect = pygame.Rect(popup_rect.left + margin, popup_rect.top + margin, piece_size, piece_size)
+        rook_rect = pygame.Rect(queen_rect.right + margin, popup_rect.top + margin, piece_size, piece_size)
+        bishop_rect = pygame.Rect(rook_rect.right + margin, popup_rect.top + margin, piece_size, piece_size)
+        knight_rect = pygame.Rect(bishop_rect.right + margin, popup_rect.top + margin, piece_size, piece_size)
+
+        DISPLAYSURF.blit(queen_img, queen_rect.topleft)
+        DISPLAYSURF.blit(rook_img, rook_rect.topleft)
+        DISPLAYSURF.blit(bishop_img, bishop_rect.topleft)
+        DISPLAYSURF.blit(knight_img, knight_rect.topleft)
+
+        pygame.display.update()
+
+        # Wait for user to click on one of the pieces
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if queen_rect.collidepoint(event.pos):
+                        return chess.QUEEN
+                    elif rook_rect.collidepoint(event.pos):
+                        return chess.ROOK
+                    elif bishop_rect.collidepoint(event.pos):
+                        return chess.BISHOP
+                    elif knight_rect.collidepoint(event.pos):
+                        return chess.KNIGHT
 
     def handle_revert_move(self):
         if self.board.move_stack:
@@ -345,12 +442,7 @@ class System:
     def handle_fen(self):
         try:
             fen = pyperclip.paste()
-            self.board.set_fen(fen)
-            
-            self.turn = self.board.turn
-            self.selected_square = None
-            self.possible_moves = list(self.board.legal_moves)
-            self.captured_pieces_white, self.captured_pieces_black = self.get_missing_pieces()
+            self.update_fen(fen)
             
             self.message = f"FEN updated to: {fen}"
         except Exception as e:
