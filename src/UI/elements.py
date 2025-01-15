@@ -3,18 +3,23 @@ from settings import *
 import chess
 import chess.svg
 import pyperclip
+import api
 
 class System:
     def __init__(self, fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
         self.board = chess.Board(fen)
         self.captured_pieces_white, self.captured_pieces_black = self.get_missing_pieces()
         self.turn = True
-        self.message = ""
+        self.message = "Master the board, savor the sushi!"        
         self.score = 0
         self.scroll_offset = 0
         self.scroll_speed = 20
         self.auto = False 
         self.end = False
+        self.sushi_move = ()
+        self.engine = api.ChessEngine()
+        self.engine.start_new_game()
+        self.eat_sushi()
         self.selected_square = None
         self.possible_moves = []
         self.images = {
@@ -38,6 +43,8 @@ class System:
         self.draw_history()
         self.draw_pieces()
         self.draw_possible_moves()
+        if self.auto:
+            self.automat()
 
     def event_listener(self):
         for event in pygame.event.get():
@@ -53,6 +60,9 @@ class System:
                 self.scroll_offset = max(min(self.scroll_offset, 0), -max_scroll_offset)
         return True
 
+    def sushi_stop(self):
+        self.engine.quit()
+
     def update_fen(self,fen):
         self.board.set_fen(fen)
         self.turn = self.board.turn
@@ -61,7 +71,14 @@ class System:
         self.possible_moves = list(self.board.legal_moves)
         self.captured_pieces_white, self.captured_pieces_black = self.get_missing_pieces()
         self.check_conditions()
+        self.eat_sushi()
         return
+
+    def automat(self):
+        if not self.turn:
+            from_square, to_square, promotion = self.sushi_move
+            chess_move = chess.Move(from_square, to_square, promotion=promotion)
+            self.execute_move(chess_move)
 
     def check_conditions(self):
         end = True
@@ -341,6 +358,21 @@ class System:
                     y = self.board_rect.top + row * square_size
                     DISPLAYSURF.blit(pygame.transform.scale(self.images[str(piece)], (square_size, square_size)), (x, y))
         
+        if hasattr(self, 'sushi_move'):
+            from_square, to_square, _ = self.sushi_move
+            from_col = chess.square_file(from_square)
+            from_row = 7 - chess.square_rank(from_square)
+            to_col = chess.square_file(to_square)
+            to_row = 7 - chess.square_rank(to_square)
+
+            from_x = self.board_rect.left + from_col * square_size + square_size // 2
+            from_y = self.board_rect.top + from_row * square_size + square_size // 2
+            to_x = self.board_rect.left + to_col * square_size + square_size // 2
+            to_y = self.board_rect.top + to_row * square_size + square_size // 2
+
+            pygame.draw.circle(DISPLAYSURF, (3, 86, 252), (from_x, from_y), square_size // 4)
+            pygame.draw.circle(DISPLAYSURF, (3, 86, 252), (to_x, to_y), square_size // 4)
+        
     def move_piece(self, from_square, to_square):
         move = chess.Move(from_square, to_square)
         if move in self.board.legal_moves:
@@ -369,6 +401,8 @@ class System:
         self.possible_moves = []
         print(f"Moved piece from {chess.square_name(move.from_square)} to {chess.square_name(move.to_square)}")
         self.check_conditions()
+        if not self.end:
+            self.eat_sushi()
 
     def promote_pawn(self, from_square, to_square):
         promotion_piece = self.promote_pawn_popup()
@@ -378,8 +412,10 @@ class System:
                 self.execute_move(move)
             else:
                 print(f"Illegal promotion move from {chess.square_name(from_square)} to {chess.square_name(to_square)} with promotion to {promotion_piece}")
-                
+
     def promote_pawn_popup(self):
+        _, _, prom = self.sushi_move
+        print(prom) # TEMP CHECK THIS
         # Create a popup window
         popup_width, popup_height = 200, 100
         popup_rect = pygame.Rect((SCREEN_WIDTH - popup_width) // 2, (SCREEN_HEIGHT - popup_height) // 2, popup_width, popup_height)
@@ -456,4 +492,16 @@ class System:
             self.message = "Enemy Engine is off"
 
     def eat_sushi(self):
-        return
+        self.engine.set_position(self.board.fen())
+        self.score, move = self.engine.go()
+        from_square = chess.parse_square(move[:2])
+        to_square = chess.parse_square(move[2:4])
+        promotion = None
+        if len(move) > 4:
+            promotion = {
+                'q': chess.QUEEN,
+                'r': chess.ROOK,
+                'b': chess.BISHOP,
+                'n': chess.KNIGHT
+            }.get(move[4])
+        self.sushi_move = (from_square, to_square, promotion)

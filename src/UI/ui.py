@@ -12,6 +12,7 @@ while running:
     pygame.display.update()
     delta = FPS_TIMER.tick(FPS) / 1000
 
+system.sushi_stop()
 pygame.quit()
 sys.exit()
 

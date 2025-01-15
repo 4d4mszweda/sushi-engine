@@ -60,6 +60,7 @@ if __name__ == "__main__":
 
     try:
         engine.start_new_game()
+        # rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
         fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
         engine.set_position(fen)
         print(engine.go())
