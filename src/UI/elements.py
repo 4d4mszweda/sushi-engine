@@ -140,10 +140,10 @@ class System:
         half_height = thermometer_height // 2
 
         if self.score > 0:
-            white_height = half_height + (self.score / 100) * half_height # wymień ten wskaźnik na inny w zależności jak wygląda score
+            white_height = half_height + (self.score / 100) * half_height
             black_height = thermometer_height - white_height
         elif self.score < 0:
-            black_height = half_height + (abs(self.score) / 100) * half_height # wymień ten wskaźnik na inny w zależności jak wygląda score
+            black_height = half_height + (abs(self.score) / 100) * half_height
             white_height = thermometer_height - black_height
         else:
             white_height = half_height
@@ -187,7 +187,7 @@ class System:
         square_size = self.board_rect.width // 8
         for row in range(8):
             for col in range(8):
-                color = MAIN_BOARD if (row + col) % 2 == 0 else SECOND_BOARD
+                color = SECOND_BOARD if (row + col) % 2 == 0 else MAIN_BOARD
                 square_rect = pygame.Rect(self.board_rect.left + col * square_size, SCREEN_HEIGHT // 19 + row * square_size, square_size, square_size)
                 pygame.draw.rect(DISPLAYSURF, color, square_rect)
                 # pygame.draw.rect(DISPLAYSURF, BLACK, square_rect, 1)
@@ -319,6 +319,7 @@ class System:
             self.handle_switch()
 
     def handle_reset(self):
+        self.auto = False
         self.update_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
         self.message = "Board was restarted"
 
