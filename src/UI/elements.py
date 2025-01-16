@@ -14,12 +14,14 @@ class System:
         self.score = 0
         self.scroll_offset = 0
         self.scroll_speed = 20
-        self.auto = False 
+        self.auto_w = False 
+        self.auto_b = False 
+        self.fen = ""
         self.end = False
-        self.sushi_move = ()
+        self.helper_w = True
+        self.helper_b = True
         self.engine = api.ChessEngine()
         self.engine.start_new_game()
-        self.eat_sushi()
         self.selected_square = None
         self.possible_moves = []
         self.images = {
@@ -43,8 +45,8 @@ class System:
         self.draw_history()
         self.draw_pieces()
         self.draw_possible_moves()
-        if self.auto:
-            self.automat()
+        self.eat_sushi()
+        self.automat()
 
     def event_listener(self):
         for event in pygame.event.get():
@@ -66,7 +68,8 @@ class System:
     def update_fen(self,fen):
         self.board.set_fen(fen)
         self.turn = self.board.turn
-        self.auto = False
+        self.auto_w = False
+        self.auto_b = False
         self.selected_square = None
         self.possible_moves = list(self.board.legal_moves)
         self.captured_pieces_white, self.captured_pieces_black = self.get_missing_pieces()
@@ -75,10 +78,17 @@ class System:
         return
 
     def automat(self):
-        if not self.turn:
+        if not hasattr(self,'sushi_move'):
+            print("NO SUSHI??")
+            return
+        if self.auto_w and self.board.turn == chess.WHITE:
             from_square, to_square, promotion = self.sushi_move
             chess_move = chess.Move(from_square, to_square, promotion=promotion)
             self.execute_move(chess_move)
+        elif self.auto_b and self.board.turn == chess.BLACK:
+            from_square, to_square, promotion = self.sushi_move
+            chess_move = chess.Move(from_square, to_square, promotion=promotion)
+            self.execute_move(chess_move)            
 
     def check_conditions(self):
         end = True
@@ -90,6 +100,8 @@ class System:
             self.message = "Draw due to insufficient material!"
         elif self.board.is_seventyfive_moves():
             self.message = "Draw due to the seventy-five-move rule!"
+        elif self.board.can_claim_threefold_repetition():
+            self.message = "Draw due to threefold repetition!"
         elif self.board.is_fivefold_repetition():
             self.message = "Draw due to fivefold repetition!"
         elif self.board.is_variant_draw():
@@ -139,11 +151,13 @@ class System:
         thermometer_y = (SCREEN_HEIGHT - thermometer_height) // 2
         half_height = thermometer_height // 2
 
+        val = min((abs(self.score) / 100), 1)  # Ensure val does not exceed 1
+
         if self.score > 0:
-            white_height = half_height + (self.score / 100) * half_height
+            white_height = half_height + val * half_height
             black_height = thermometer_height - white_height
         elif self.score < 0:
-            black_height = half_height + (abs(self.score) / 100) * half_height
+            black_height = half_height + val * half_height
             white_height = thermometer_height - black_height
         else:
             white_height = half_height
@@ -239,11 +253,25 @@ class System:
         self.draw_button(self.fen_btn, "FEN", self.fen_btn.collidepoint(pygame.mouse.get_pos()))
         self.draw_button(self.reset_btn, "RESET", self.reset_btn.collidepoint(pygame.mouse.get_pos()))
 
-        self.auto_switch = pygame.Rect(hist_rect.centerx - button_width // 2, self.revert_btn.bottom + button_margin, button_width, button_height)
-        auto_switch_hover = self.auto_switch.collidepoint(pygame.mouse.get_pos())
-        self.draw_switch(self.auto_switch, self.auto)
+        self.auto_w_switch = pygame.Rect(hist_rect.left + button_margin, self.revert_btn.bottom + button_margin, 25 + button_width // 2, button_height)
+        auto_w_switch_hover = self.auto_w_switch.collidepoint(pygame.mouse.get_pos())
+        self.draw_switch(self.auto_w_switch, self.auto_w, label="Auto W")
 
-        message_rect = pygame.Rect(hist_rect.left + button_margin, self.auto_switch.bottom + button_margin, hist_width - 2 * button_margin, button_height * 2)
+        self.auto_b_switch = pygame.Rect(hist_rect.centerx + button_margin // 2, self.revert_btn.bottom + button_margin, 25 + button_width // 2, button_height)
+        auto_b_switch_hover = self.auto_b_switch.collidepoint(pygame.mouse.get_pos())
+        self.draw_switch(self.auto_b_switch, self.auto_b, label="Auto B")
+
+        # Add the new Helper switch below the auto switch
+        self.helper_w_switch = pygame.Rect(hist_rect.left + button_margin, self.auto_w_switch.bottom + button_margin, 25 + button_width // 2, button_height)
+        helper_w_switch_hover = self.helper_w_switch.collidepoint(pygame.mouse.get_pos())
+        self.draw_switch(self.helper_w_switch, self.helper_w, label="Helper W")
+
+        # Add the new Helper B switch next to the Helper switch
+        self.helper_b_switch = pygame.Rect(hist_rect.centerx + button_margin // 2, self.auto_w_switch.bottom + button_margin, 25 + button_width // 2, button_height)
+        helper_b_switch_hover = self.helper_b_switch.collidepoint(pygame.mouse.get_pos())
+        self.draw_switch(self.helper_b_switch, self.helper_b, label="Helper B")
+
+        message_rect = pygame.Rect(hist_rect.left + button_margin, self.helper_w_switch.bottom + button_margin, hist_width - 2 * button_margin, button_height * 2)
         pygame.draw.rect(DISPLAYSURF, (0, 0, 0), message_rect)
         pygame.draw.rect(DISPLAYSURF, (250, 223, 22), message_rect, 2)
         self.draw_text_wrapped(self.message, message_rect, FONT, (255, 255, 0), margin=10)
@@ -290,7 +318,7 @@ class System:
 
         # Blit the history surface onto the main display surface
         DISPLAYSURF.blit(history_surface, (history_rect.left, history_rect.top), (0, 0, history_rect.width, history_rect.height))
-        if revert_btn_hover or fen_btn_hover or auto_switch_hover or reset_btn_hover:
+        if revert_btn_hover or fen_btn_hover or auto_w_switch_hover or auto_b_switch_hover or reset_btn_hover or helper_b_switch_hover or helper_w_switch_hover:
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
         else:
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
@@ -302,10 +330,10 @@ class System:
         DISPLAYSURF.blit(button_text, (rect.centerx - button_text.get_width() // 2, rect.centery - button_text.get_height() // 2))
         pygame.draw.rect(DISPLAYSURF, (250, 223, 22), rect, 2)
 
-    def draw_switch(self, rect, state):
+    def draw_switch(self, rect, state, label):
         switch_color = (33, 166, 0) if state else (181, 28, 11)
         pygame.draw.rect(DISPLAYSURF, switch_color, rect)
-        switch_text = FONT.render("ON" if state else "OFF", True, (255, 255, 255))
+        switch_text = FONT.render(label, True, (255, 255, 255))
         DISPLAYSURF.blit(switch_text, (rect.centerx - switch_text.get_width() // 2, rect.centery - switch_text.get_height() // 2))
 
     def handle_button_click(self, mouse_pos):
@@ -315,11 +343,32 @@ class System:
             self.handle_fen()
         elif self.reset_btn.collidepoint(mouse_pos):
             self.handle_reset()
-        elif self.auto_switch.collidepoint(mouse_pos):
-            self.handle_switch()
+        elif self.auto_w_switch.collidepoint(mouse_pos):
+            self.handle_switch(True)
+        elif self.auto_b_switch.collidepoint(mouse_pos):
+            self.handle_switch(False)
+        elif self.helper_w_switch.collidepoint(mouse_pos):
+            self.handle_helper(True)
+        elif self.helper_b_switch.collidepoint(mouse_pos):
+            self.handle_helper(False)
+
+    def handle_helper(self, color):
+        if color:
+            self.helper_w = not self.helper_w
+            if self.helper_w:
+                self.message = "Helper W is on"
+            else:
+                self.message = "Helper W is off"
+        else:
+            self.helper_b = not self.helper_b
+            if self.helper_b:
+                self.message = "Helper B is on"
+            else:
+                self.message = "Helper B is off"
 
     def handle_reset(self):
-        self.auto = False
+        self.auto_w = False
+        self.auto_b = False
         self.update_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
         self.message = "Board was restarted"
 
@@ -380,9 +429,10 @@ class System:
             to_x = self.board_rect.left + to_col * square_size + square_size // 2
             to_y = self.board_rect.top + to_row * square_size + square_size // 2
 
-            pygame.draw.circle(DISPLAYSURF, (3, 86, 252), (from_x, from_y), square_size // 4)
-            pygame.draw.circle(DISPLAYSURF, (3, 86, 252), (to_x, to_y), square_size // 4)
-        
+            if (self.helper_w and self.turn) or (not self.turn and self.helper_b):
+                pygame.draw.circle(DISPLAYSURF, (3, 86, 252), (from_x, from_y), square_size // 4)
+                pygame.draw.circle(DISPLAYSURF, (3, 86, 252), (to_x, to_y), square_size // 4)
+
     def move_piece(self, from_square, to_square):
         move = chess.Move(from_square, to_square)
         if move in self.board.legal_moves:
@@ -424,10 +474,13 @@ class System:
                 print(f"Illegal promotion move from {chess.square_name(from_square)} to {chess.square_name(to_square)} with promotion to {promotion_piece}")
 
     def promote_pawn_popup(self):
+        if not hasattr(self, 'sushi_move'):
+            print("no sushi 2?")
+            return
         _, _, prom = self.sushi_move
-        print(prom) # TEMP CHECK THIS
+
         # Create a popup window
-        popup_width, popup_height = 200, 100
+        popup_width, popup_height = 210, 60
         popup_rect = pygame.Rect((SCREEN_WIDTH - popup_width) // 2, (SCREEN_HEIGHT - popup_height) // 2, popup_width, popup_height)
         pygame.draw.rect(DISPLAYSURF, (255, 255, 255), popup_rect)
         pygame.draw.rect(DISPLAYSURF, (0, 0, 0), popup_rect, 2)
@@ -457,6 +510,11 @@ class System:
         DISPLAYSURF.blit(bishop_img, bishop_rect.topleft)
         DISPLAYSURF.blit(knight_img, knight_rect.topleft)
 
+        # Highlight the selected piece with a blue dot
+        selected_rects = [None, None, knight_rect, bishop_rect, rook_rect, queen_rect]
+        selected_rect = selected_rects[prom]
+        pygame.draw.circle(DISPLAYSURF, (0, 0, 255), selected_rect.center, 5)
+
         pygame.display.update()
 
         # Wait for user to click on one of the pieces
@@ -477,6 +535,8 @@ class System:
 
     def handle_revert_move(self):
         if self.board.move_stack:
+            self.auto_w = False
+            self.auto_b = False
             last_move = self.board.pop()
             self.turn = not self.turn
             self.selected_square = None
@@ -494,16 +554,33 @@ class System:
         except Exception as e:
             self.message = f"Failed to update FEN: {str(e)}"
 
-    def handle_switch(self):
-        self.auto = not self.auto
-        if self.auto: 
-            self.message = "Enemy Engine is on"
+    def handle_switch(self, color):
+        if color:
+            if not self.auto_w and self.auto_b:
+                self.auto_b = not self.auto_b
+            self.auto_w = not self.auto_w
+            if self.auto_w: 
+                self.message = "Auto w is on"
+            else:
+                self.message = "Auto w is off"
         else:
-            self.message = "Enemy Engine is off"
+            if not self.auto_b and self.auto_w:
+                self.auto_w = not self.auto_w
+            self.auto_b = not self.auto_b
+            if self.auto_b: 
+                self.message = "Auto b is on"
+            else:
+                self.message = "Auto b is off"
 
     def eat_sushi(self):
+        if self.fen == self.board.fen() or not self.board.fen():
+            return
+        else:
+            self.fen = self.board.fen()
+
         self.engine.set_position(self.board.fen())
         self.score, move = self.engine.go()
+        self.score = self.score / 100
         from_square = chess.parse_square(move[:2])
         to_square = chess.parse_square(move[2:4])
         promotion = None

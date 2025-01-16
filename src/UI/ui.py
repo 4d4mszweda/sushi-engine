@@ -12,7 +12,10 @@ while running:
     try:
         system.update()
     except Exception as e:
-        system.message = str(e)
+        system.sushi_stop()
+        print(e)
+        pygame.quit()
+        sys.exit()
 
     pygame.display.update()
     delta = FPS_TIMER.tick(FPS) / 1000
