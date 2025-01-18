@@ -1076,7 +1076,6 @@ int evaluate_position()
         {
             // init piece
             int piece = board[square];
-            int activity = 0;
 
             // material evaluation
             score += material_score[piece];
@@ -1084,51 +1083,13 @@ int evaluate_position()
             // piece is white
             if (piece >= 1 && piece <= 6)
             {
-                BitBoard bb = board_to_bitboard();
-                int bitbaord_square = (square / 16) * 8 + square % 16;
-                switch (piece)
-                {
-                case N:
-                    activity = count_bits(knight_attacks[bitbaord_square]);
-                    break;
-                case B:
-                    activity = count_bits(get_bishop_attacks(bitbaord_square, bb));
-                    break;
-                case R:
-                    activity = count_bits(get_rook_attacks(bitbaord_square, bb));
-                    break;
-                case Q:
-                    activity = count_bits(get_rook_attacks(bitbaord_square, bb)) + count_bits(get_bishop_attacks(bitbaord_square, bb));
-                    break;
-                default:
-                    break;
-                }
-                score += positional_score[square] + activity;
+                score += positional_score[square];
             }
 
             // black pieces
             else if (piece >= 7 && piece <= 12)
             {
-                BitBoard bb = board_to_bitboard();
-                int bitbaord_square = (square / 16) * 8 + square % 16;
-                switch (piece)
-                {
-                case N:
-                    activity = count_bits(knight_attacks[bitbaord_square]);
-                    break;
-                case B:
-                    activity = count_bits(get_bishop_attacks(bitbaord_square, bb));
-                    break;
-                case R:
-                    activity = count_bits(get_rook_attacks(bitbaord_square, bb));
-                    break;
-                case Q:
-                    activity = count_bits(get_rook_attacks(bitbaord_square, bb)) + count_bits(get_bishop_attacks(bitbaord_square, bb));
-                    break;
-                default:
-                    break;
-                }
-                score -= positional_score[square] + activity;
+                score -= positional_score[square];
             }
         }
     }
@@ -1393,7 +1354,7 @@ void uci()
         else if (!strncmp(line, "go", 2))
         {
             // search position with current depth 4
-            int score = search(4);
+            int score = search(5);
 
             // output best move
             printf("%d %s %s %c\n", score, square_to_coords[get_move_source(best_move)],
