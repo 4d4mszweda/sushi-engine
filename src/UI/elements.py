@@ -94,20 +94,36 @@ class System:
         end = True
         if self.board.is_checkmate():
             self.message = "Checkmate! " + ("White wins!" if self.board.turn == chess.BLACK else "Black wins!")
+            self.auto_b = False
+            self.auto_w = False
         elif self.board.is_stalemate():
             self.message = "Stalemate! It's a draw!"
+            self.auto_b = False
+            self.auto_w = False
         elif self.board.is_insufficient_material():
             self.message = "Draw due to insufficient material!"
+            self.auto_b = False
+            self.auto_w = False
         elif self.board.is_seventyfive_moves():
             self.message = "Draw due to the seventy-five-move rule!"
+            self.auto_b = False
+            self.auto_w = False
         elif self.board.can_claim_threefold_repetition():
             self.message = "Draw due to threefold repetition!"
+            self.auto_b = False
+            self.auto_w = False
         elif self.board.is_fivefold_repetition():
             self.message = "Draw due to fivefold repetition!"
+            self.auto_b = False
+            self.auto_w = False
         elif self.board.is_variant_draw():
             self.message = "Draw due to variant rules!"
+            self.auto_b = False
+            self.auto_w = False
         elif self.board.is_variant_loss():
             self.message = "Loss due to variant rules!"
+            self.auto_b = False
+            self.auto_w = False
         else:
             end = False
         self.end = end
